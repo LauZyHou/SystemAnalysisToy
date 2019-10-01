@@ -1,0 +1,64 @@
+{
+  "Loc": [
+    "start",
+    "select"
+  ],
+  "Act": [
+    "bget",
+    "sget",
+    "coin",
+    "ret_coin",
+    "refill"
+  ],
+  "Effect": {
+    "bget": [
+      "nbeer:=nbeer-1"
+    ],
+    "sget": [
+      "nsoda:=nsoda-1"
+    ],
+    "refill": [
+      "nbeer:=1",
+      "nsoda:=1"
+    ]
+  },
+  "Hooks": [
+    [
+      "start",
+      "true",
+      "coin",
+      "select"
+    ],
+    [
+      "start",
+      "true",
+      "refill",
+      "start"
+    ],
+    [
+      "select",
+      "nsoda>0",
+      "sget",
+      "start"
+    ],
+    [
+      "select",
+      "nbeer>0",
+      "bget",
+      "start"
+    ],
+    [
+      "select",
+      "nsoda=0∧nbeer=0",
+      "ret_coin",
+      "start"
+    ]
+  ],
+  "Loc_0": [
+    "start"
+  ],
+  "g_0": {
+    "nsoda": 1,
+    "nbeer": 1
+  }
+}
