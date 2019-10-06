@@ -18,8 +18,8 @@
       "nsoda:=nsoda-1"
     ],
     "refill": [
-      "nbeer:=1",
-      "nsoda:=1"
+      "nbeer:=2",
+      "nsoda:=2"
     ]
   },
   "Hooks": [
@@ -58,7 +58,7 @@
     "start"
   ],
   "g_0": {
-    "nsoda": 1,
-    "nbeer": 1
+    "nsoda": 2,
+    "nbeer": 2
   }
 }
