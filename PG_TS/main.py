@@ -76,6 +76,12 @@ class Label:
             return self.loc
         return self.loc + ',' + ','.join(self.guard)
 
+    def to_list(self) -> List[str]:
+        """转为list表示，如：[select,nsoda>0,nbeer>0]"""
+        ret: List[str] = [self.loc]
+        ret.extend(self.guard)
+        return ret
+
 
 def myeval(ev: Dict[str, int], exp: str) -> int:
     """对表达式求值
@@ -196,8 +202,8 @@ def refresh_all(s: State) -> None:
             Trans.append(trtr)
 
             # (AP)原子命题中添加条件部分。(L)当前Label的条件部分gs也添加此条件。
-            AP.add(h[1])
             if h[1] != 'true' and h[1] != 'false':
+                AP.add(h[1])
                 gs.add(h[1])
 
             # (Act_)添加切实使用了的当前转移的动作
@@ -247,7 +253,7 @@ if __name__ == '__main__':
         'Trans': [str(t) for t in Trans],
         'I': [str(i) for i in I],
         'AP': list(AP),
-        'L': [str(l) for l in L]
+        'L': [l.to_list() for l in L]
     }
     with open(FILE_OUT, "w", encoding='utf-8') as f:
         # json.dump(out, f)
