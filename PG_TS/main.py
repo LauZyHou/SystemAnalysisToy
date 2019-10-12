@@ -3,84 +3,14 @@
 # @Author  : LauZyHou
 # @File    : 主文件
 
-import json
-from typing import List, Dict, Set, Tuple
-from deprecated import deprecated
+from typing import List, Dict, Set
 from functools import cmp_to_key
+
+from PG_TS.transition_system import TransitionSystem, State, Label, Transfer, write_ts_in_json
+from PG_TS.program_graph import ProgramGraph, read_pg_from_json
 
 FILE_IN = r'./in_pg.json'
 FILE_OUT = r'./out_ts.json'
-
-
-class State:
-    """生成的Transition System的状态类"""
-    loc: str = None  # 来自PG的Loc
-    eval_var: Dict[str, int] = None  # 所有Var的取值Eval(Var)，这里用字典表示
-
-    # is_alive: bool = True  # 指示该状态是否是活动的（已全部计算完后继的状态设置为False）
-
-    def __init__(self, loc_: str, eval_var_: Dict):
-        """构造器：直接传入location名称和变量字典"""
-        self.loc = loc_
-        self.eval_var = eval_var_
-
-    def __str__(self):
-        """转为字符串表示：如<start,nsoda=1∧nbeer=1>"""
-        return "<" + self.loc + "," + "∧".join([k + "=" + str(v) for k, v in self.eval_var.items()]) + ">"
-
-    @deprecated(version='1.0', reason='写入JSON时直接写入字符串')
-    def to_list(self) -> List:
-        """转为list表示"""
-        return [self.loc, self.eval_var]
-
-    def __eq__(self, other):
-        """判断两Stat相等：Location相同且所有变量值相同"""
-        if self.loc != other.loc:
-            return False
-        for k in var_list:
-            if self.eval_var[k] != other.eval_var[k]:
-                return False
-        return True
-
-
-class Transfer:
-    """生成的Transition System的转移类"""
-    s1: State = None  # 转移前的状态
-    act: str = None  # 转移经过的动作
-    s2: State = None  # 转移后的状态
-
-    def __init__(self, s1_: State, act_: str, s2_: State):
-        """构造器：状态，动作，状态"""
-        self.s1 = s1_
-        self.act = act_
-        self.s2 = s2_
-
-    def __str__(self):
-        """转为字符串表示：如<select,nsoda=1∧nbeer=1> -sget-> <start,nsoda=0∧nbeer=1>"""
-        return str(self.s1) + " -" + self.act + "-> " + str(self.s2)
-
-
-class Label:
-    """生成的Transition System中，对应于每个Stat，标签映射后的结果"""
-    loc: str = None  # Location部分
-    guard: List[str] = None  # 所满足条件部分
-
-    def __init__(self, loc_: str, guard_: List[str]):
-        """构造器：位置，条件"""
-        self.loc = loc_
-        self.guard = guard_
-
-    def __str__(self):
-        """转为字符串表示，如：select,nsoda>0,nbeer>0"""
-        if len(self.guard) == 0:
-            return self.loc
-        return self.loc + ',' + ','.join(self.guard)
-
-    def to_list(self) -> List[str]:
-        """转为list表示，如：[select,nsoda>0,nbeer>0]"""
-        ret: List[str] = [self.loc]
-        ret.extend(self.guard)
-        return ret
 
 
 def myeval(ev: Dict[str, int], exp: str) -> int:
@@ -213,49 +143,39 @@ def refresh_all(s: State) -> None:
 
 
 if __name__ == '__main__':
-    # 从JSON文件中读取Program Graph
-    with open(FILE_IN, encoding='utf8') as f:
-        ok = json.load(f)
-    Loc: List[str] = ok['Loc']  # 存所有Location
-    Act: List[str] = ok['Act']  # 存所有Action
-    Effect: Dict[str, List[str]] = ok['Effect']  # 存每个Action对变量的影响（无影响的Action不被记录）
-    Hooks: List[List[str]] = ok['Hooks']  # 存PG的所有转移（符号上是个弯钩箭头所以叫Hooks）
-    Loc_0: List[str] = ok['Loc_0']  # 初始Location
-    g_0: Dict[str, int] = ok['g_0']  # 初始条件，可指示变量的初值
-    # 从g_0中读取变量名称
-    var_list = list(g_0.keys())
-    print("读取变量名称: ", var_list)
-    # 定义转换后的Transaction System的内容，它们最终会写入JSON文件
-    S: List[State] = []  # 存所有状态
-    Act_: Set[str] = set()  # 存所有动作（PG中未必所有Act都用到，所以用set去重）
-    Trans: List[Transfer] = []  # 存所有转移关系
-    I: List[State] = []  # 初始状态集合
-    AP: Set[str] = set()  # 原子命题集合（也是用set去重）
-    L: List[Label] = []  # 存S中每个状态通过标签函数映射的结果
+    # 读取Program Graph，并为其字段创建引用
+    print("读取Program Graph从", FILE_IN)
+    PG: ProgramGraph = read_pg_from_json(FILE_IN)
+    Loc: List[str] = PG.locations  # 存所有Location
+    Act: List[str] = PG.actions  # 存所有Action
+    Effect: Dict[str, List[str]] = PG.effects  # 存每个Action对变量的影响（无影响的Action不被记录）
+    Hooks: List[List[str]] = PG.hooks  # 存PG的所有转移（符号上是个弯钩箭头所以叫Hooks）
+    Loc_0: List[str] = PG.initial_locations  # 初始Location
+    g_0: Dict[str, int] = PG.initial_guard  # 初始条件，可指示变量的初值
+
+    # 定义Transaction System，并为其字段创建引用
+    print("正在生成Transition System...")
+    TS: TransitionSystem = TransitionSystem()
+    S: List[State] = TS.states  # 存所有状态
+    Act_: Set[str] = TS.actions  # 存所有动作（PG中未必所有Act都用到，所以用set去重）
+    Trans: List[Transfer] = TS.transitions  # 存所有转移关系
+    I: List[State] = TS.initial_states  # 初始状态集合
+    AP: Set[str] = TS.atomic_propositions  # 原子命题集合（也是用set去重）
+    L: List[Label] = TS.labels  # 存S中每个状态通过标签函数映射的结果
+
     # 从Loc_0生成初始状态I，并在S中也写入初始状态
     for loc0 in Loc_0:
         s0 = State(loc0, g_0.copy())
         I.append(s0)
         S.append(s0)
-    print("初始状态集合：I=", [str(s) for s in I])
+
     # 从S和PG上的Act(用Effect实际就不必用Act了)、Hooks和Effect生成TS的其它内容
     idx = 0  # 指示BFS搜索到S中的哪个状态，已经搜过的状态设is_active=False
     while idx < len(S):  # S的大小会随新状态append进来而逐渐变大
         s = S[idx]  # 当前要BFS的状态
         # 从这个状态s找到能一步到达的状态，更新S,Act_,Trans,AP,L
         refresh_all(s)
-        # s.is_alive = False
         idx += 1
+
     # 写入JSON文件
-    out = {
-        'S': [str(s) for s in S],
-        'Act': list(Act_),
-        'Trans': [str(t) for t in Trans],
-        'I': [str(i) for i in I],
-        'AP': list(AP),
-        'L': [l.to_list() for l in L]
-    }
-    with open(FILE_OUT, "w", encoding='utf-8') as f:
-        # json.dump(out, f)
-        f.write(json.dumps(out).encode('utf-8').decode('unicode_escape'))
-    print("完成！输出结果于", FILE_OUT)
+    write_ts_in_json(TS, FILE_OUT)
