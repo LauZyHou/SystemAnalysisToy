@@ -6,7 +6,7 @@
 from typing import List, Dict, Set
 from functools import cmp_to_key
 
-from PG_TS.transition_system import TransitionSystem, State, Label, Transfer, write_ts_in_json
+from PG_TS.transition_system import TransitionSystem, State, Label, Transfer, write_ts_in_json, out_ts_graph
 from PG_TS.program_graph import ProgramGraph, read_pg_from_json
 
 FILE_IN = r'./in_pg.json'
@@ -22,8 +22,9 @@ def myeval(ev: Dict[str, int], exp: str) -> int:
     # 获取变量字典的List[tuple]表示，为防止在后续替换中破坏掉变量（如先替换'a'会破坏变量'ba'），将其按len降序
     evs: List = list(ev.items())  # 具体是List[Tuple[str, int]]，PyCharm误报
     assert type(evs[0]) is tuple
+    # 根据变量长度降序排序
     evs.sort(key=cmp_to_key(lambda x, y: len(y[0]) - len(x[0])))
-    # 先将全部变量替换成值
+    # 将表达式exp内的全部变量替换成值
     for k, v in evs:
         exp = exp.replace(k, str(v))
     # 现在变成了例如"2+1"这样的字符串，直接用eval求值即可
@@ -179,3 +180,6 @@ if __name__ == '__main__':
 
     # 写入JSON文件
     write_ts_in_json(TS, FILE_OUT)
+
+    # 生成有向图
+    out_ts_graph(TS, 'png')

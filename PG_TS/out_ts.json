@@ -20,11 +20,11 @@
     "<select,nsoda=0∧nbeer=0>"
   ],
   "Act": [
+    "coin",
     "refill",
     "ret_coin",
-    "coin",
-    "bget",
-    "sget"
+    "sget",
+    "bget"
   ],
   "Trans": [
     "<start,nsoda=2∧nbeer=2> -coin-> <select,nsoda=2∧nbeer=2>",
@@ -63,11 +63,11 @@
     "<start,nsoda=2∧nbeer=2>"
   ],
   "AP": [
-    "nbeer>0",
-    "nsoda>0",
     "start",
+    "nsoda>0",
     "nsoda=0∧nbeer=0",
-    "select"
+    "select",
+    "nbeer>0"
   ],
   "L": [
     [
@@ -75,8 +75,8 @@
     ],
     [
       "select",
-      "nbeer>0",
-      "nsoda>0"
+      "nsoda>0",
+      "nbeer>0"
     ],
     [
       "start"
@@ -86,13 +86,13 @@
     ],
     [
       "select",
-      "nbeer>0",
-      "nsoda>0"
+      "nsoda>0",
+      "nbeer>0"
     ],
     [
       "select",
-      "nbeer>0",
-      "nsoda>0"
+      "nsoda>0",
+      "nbeer>0"
     ],
     [
       "start"
@@ -109,8 +109,8 @@
     ],
     [
       "select",
-      "nbeer>0",
-      "nsoda>0"
+      "nsoda>0",
+      "nbeer>0"
     ],
     [
       "select",

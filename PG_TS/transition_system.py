@@ -1,6 +1,7 @@
 import json
 from typing import List, Dict, Set
 from deprecated import deprecated
+from graphviz import Digraph
 
 
 class State:
@@ -21,6 +22,10 @@ class State:
     def to_list(self) -> List:
         """转为list表示"""
         return [self.loc, self.eval_var]
+
+    def to_graph_use(self):
+        """给绘图用的字符串表示：如start,nsoda=1,nbeer=1"""
+        return self.loc + "," + ",".join([k + "=" + str(v) for k, v in self.eval_var.items()])
 
     def __eq__(self, other):
         """判断两Stat相等：Location相同且所有变量值相同"""
@@ -116,3 +121,25 @@ def write_ts_in_json(ts: TransitionSystem, file_path: str) -> None:
         # json.dump(out, f)
         f.write(json.dumps(ts.to_dict()).encode('utf-8').decode('unicode_escape'))
     print("完成！输出结果于", file_path)
+
+
+def out_ts_graph(ts: TransitionSystem, file_type: str) -> None:
+    """将Transition System有向图输出
+    :param ts: 要输出的Transition System
+    :param file_type: 文件类型(扩展名)
+    """
+    # 为Transaction System的字段创建引用
+    S: List[State] = ts.states  # 存所有状态
+    Trans: List[Transfer] = ts.transitions  # 存所有转移关系
+
+    # 生成TS的GraphViz有向图
+    dot = Digraph(comment='Transition System')
+    for s in S:  # 生成结点(状态)
+        str_s = s.to_graph_use()
+        dot.node(str_s, str_s)  # 第一参数是其唯一标识,第二参数是外显的文字,这里都用其字符串
+    for t in Trans:  # 生成边(转移关系上的动作)
+        str_s1 = t.s1.to_graph_use()
+        str_act = str(t.act)
+        str_s2 = t.s2.to_graph_use()
+        dot.edge(str_s1, str_s2, str_act)
+    dot.render('transition_system.gv', view=True, format=file_type)
