@@ -100,7 +100,7 @@ class TransitionSystem:
         self.atomic_propositions = ap_ if ap_ is not None else set()
         self.labels = l_ if l_ is not None else list()
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         """转为字典"""
         return {
             'S': [str(s) for s in self.states],
@@ -111,15 +111,31 @@ class TransitionSystem:
             'L': [l.to_list() for l in self.labels]
         }
 
+    def to_dict2(self) -> Dict:
+        """[*]转为字典(标签中含对应状态)"""
+        label_list: List[str] = list()
+        for l, s in zip(self.labels, self.states):
+            temp: str = 'L（' + str(s.to_graph_use()) + ") = {" + str(l) + "}"
+            label_list.append(temp)
 
-def write_ts_in_json(ts: TransitionSystem, file_path: str) -> None:
+        return {
+            'S': [str(s) for s in self.states],
+            'Act': list(self.actions),
+            'Trans': [str(t) for t in self.transitions],
+            'I': [str(i) for i in self.initial_states],
+            'AP': list(self.atomic_propositions),
+            'L': label_list
+        }
+
+
+def write_ts_in_json(ts_dict: Dict, file_path: str) -> None:
     """将Transition System写入JSON文件
-    :param ts: 要持久化的Transition System
+    :param ts_dict: 要持久化的Transition System的字典表示
     :param file_path: 文件路径
     """
     with open(file_path, "w", encoding='utf-8') as f:
         # json.dump(out, f)
-        f.write(json.dumps(ts.to_dict()).encode('utf-8').decode('unicode_escape'))
+        f.write(json.dumps(ts_dict, indent=1).encode('utf-8').decode('unicode_escape'))
     print("完成！输出结果于", file_path)
 
 

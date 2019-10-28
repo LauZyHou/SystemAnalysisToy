@@ -6,11 +6,13 @@
 from typing import List, Dict, Set
 from functools import cmp_to_key
 
-from PG_TS.transition_system import TransitionSystem, State, Label, Transfer, write_ts_in_json, out_ts_graph
+from PG_TS.transition_system import TransitionSystem, State, Label, Transfer
+from PG_TS.transition_system import write_ts_in_json, out_ts_graph
 from PG_TS.program_graph import ProgramGraph, read_pg_from_json
 
 FILE_IN = r'./in_pg.json'
 FILE_OUT = r'./out_ts.json'
+SHOW_OUT = r'./show_ts.json'
 
 
 def myeval(ev: Dict[str, int], exp: str) -> int:
@@ -179,7 +181,8 @@ if __name__ == '__main__':
         idx += 1
 
     # 写入JSON文件
-    write_ts_in_json(TS, FILE_OUT)
+    write_ts_in_json(TS.to_dict(), FILE_OUT)
+    write_ts_in_json(TS.to_dict2(), SHOW_OUT)
 
     # 生成有向图
     out_ts_graph(TS, 'png')

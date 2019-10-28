@@ -70,72 +70,23 @@
   "start"
  ],
  "L": [
-  [
-   "start"
-  ],
-  [
-   "select",
-   "nsoda>0",
-   "nbeer>0"
-  ],
-  [
-   "start"
-  ],
-  [
-   "start"
-  ],
-  [
-   "select",
-   "nsoda>0",
-   "nbeer>0"
-  ],
-  [
-   "select",
-   "nsoda>0",
-   "nbeer>0"
-  ],
-  [
-   "start"
-  ],
-  [
-   "start"
-  ],
-  [
-   "start"
-  ],
-  [
-   "select",
-   "nbeer>0"
-  ],
-  [
-   "select",
-   "nsoda>0",
-   "nbeer>0"
-  ],
-  [
-   "select",
-   "nsoda>0"
-  ],
-  [
-   "start"
-  ],
-  [
-   "start"
-  ],
-  [
-   "select",
-   "nbeer>0"
-  ],
-  [
-   "select",
-   "nsoda>0"
-  ],
-  [
-   "start"
-  ],
-  [
-   "select",
-   "nsoda=0∧nbeer=0"
-  ]
+  "L（start,nsoda=2,nbeer=2) = {start}",
+  "L（select,nsoda=2,nbeer=2) = {select,nsoda>0,nbeer>0}",
+  "L（start,nsoda=1,nbeer=2) = {start}",
+  "L（start,nsoda=2,nbeer=1) = {start}",
+  "L（select,nsoda=1,nbeer=2) = {select,nsoda>0,nbeer>0}",
+  "L（select,nsoda=2,nbeer=1) = {select,nsoda>0,nbeer>0}",
+  "L（start,nsoda=0,nbeer=2) = {start}",
+  "L（start,nsoda=1,nbeer=1) = {start}",
+  "L（start,nsoda=2,nbeer=0) = {start}",
+  "L（select,nsoda=0,nbeer=2) = {select,nbeer>0}",
+  "L（select,nsoda=1,nbeer=1) = {select,nsoda>0,nbeer>0}",
+  "L（select,nsoda=2,nbeer=0) = {select,nsoda>0}",
+  "L（start,nsoda=0,nbeer=1) = {start}",
+  "L（start,nsoda=1,nbeer=0) = {start}",
+  "L（select,nsoda=0,nbeer=1) = {select,nbeer>0}",
+  "L（select,nsoda=1,nbeer=0) = {select,nsoda>0}",
+  "L（start,nsoda=0,nbeer=0) = {start}",
+  "L（select,nsoda=0,nbeer=0) = {select,nsoda=0∧nbeer=0}"
  ]
 }
