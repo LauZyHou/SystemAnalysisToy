@@ -50,6 +50,9 @@ def satisfy_ap(ev: Dict[str, int], ap: str) -> bool:
     elif ap.find('<=') > 0:
         left, right = ap.split('<=')
         return myeval(ev, left) <= myeval(ev, right)
+    elif ap.find('!=') > 0:
+        left, right = ap.split('!=')
+        return myeval(ev, left) <= myeval(ev, right)
     elif ap.find('=') > 0:
         left, right = ap.split('=')
         return myeval(ev, left) == myeval(ev, right)

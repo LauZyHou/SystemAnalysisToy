@@ -20,11 +20,11 @@
   "<select,nsoda=0∧nbeer=0>"
  ],
  "Act": [
-  "ret_coin",
-  "bget",
   "refill",
+  "ret_coin",
+  "sget",
   "coin",
-  "sget"
+  "bget"
  ],
  "Trans": [
   "<start,nsoda=2∧nbeer=2> -coin-> <select,nsoda=2∧nbeer=2>",
@@ -63,11 +63,11 @@
   "<start,nsoda=2∧nbeer=2>"
  ],
  "AP": [
-  "nsoda>0",
+  "start",
   "nbeer>0",
+  "nsoda>0",
   "select",
-  "nsoda=0∧nbeer=0",
-  "start"
+  "nsoda=0∧nbeer=0"
  ],
  "L": [
   "L（start,nsoda=2,nbeer=2) = {start}",
