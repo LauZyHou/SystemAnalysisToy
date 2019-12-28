@@ -92,25 +92,121 @@ def parseToDNF(formula: str) -> List[Tuple[str, str]]:
 
 # --------------------------------------------------------
 
-def parseToDNF(f: str):
+
+def isNormalForm(f: str) -> int:
+    """
+    检查LTL公式是否已经是标准型,如a∧b∧X(c)
+    如果是标准型,返回X位置,否则返回-1
+    """
+    # X前面只能有合取,X后面不能有析取
+    # 先从后向前匹配括号,检查匹配到的位置是X
+    flen: int = len(f)
+    if f[flen - 1] != ')':
+        return -1
+    cnt: int = 1  # 右括号被左括号消掉后的数量
+    i = flen - 2
+    while i >= 0:
+        if f[i] == '(':
+            cnt -= 1
+        elif f[i] == ')':
+            cnt += 1
+        if cnt == 0:
+            break
+        i -= 1
+    if i < 3:  # 至少是a∧X(b),即停止的游标最小也应该是3
+        return -1
+    if f[i - 1] != 'X':  # '('前一个字符必须是'X'
+        return -1
+    # 最后,检查前面是否不出现G/F/U/R/∨
+    if re.search('[GFUR∨]', f[:i - 2]) is not None:
+        return -1
+    return i - 1
+
+
+# --------------------------------------------------------
+
+def _parseCons(f: str) -> Set[str]:
+    """递归生成公式f的合取项"""
+    ret_set = set()
+    # [-1,...,len]中间记录最外层合取'∧'的下标,以做两两拆分
+    hq_idxes = [-1]
+    f = _cleanOuterBrackets(f)  # 清除多余括号
+    cnt = 0  # 记录左括号被右括号消除最后剩下的数目
+    for i in range(len(f) - 1):
+        if f[i] == '(':
+            cnt += 1
+        elif f[i] == ')':
+            cnt -= 1
+        if cnt == 0 and f[i + 1] == '∧':
+            hq_idxes.append(i + 1)
+    hq_idxes.append(len(f))
+    if len(hq_idxes) == 2:  # 递归出口,最外层已经没有合取项
+        return {f}
+    for j in range(len(hq_idxes) - 1):
+        ret_set |= _parseCons(f[hq_idxes[j] + 1:hq_idxes[j + 1]])
+    return ret_set
+
+
+def _clearConjunction(f1: str, f2: str) -> str:
+    """
+    公式合取,去除多余的括号和合取项
+    :param f1: 公式1
+    :param f2: 公式2
+    :return: 合取后的公式
+    """
+    ret_list = list(_parseCons(f1) | _parseCons(f2))
+    sorted(ret_list)
+    return '((' + ')∧('.join(ret_list) + '))'
+
+
+# --------------------------------------------------------
+
+formula_dict = dict()
+
+dgnum = 0  # 递归层数,用于调试
+
+
+def parseToDNF(f: str) -> Set[Tuple[str, str]]:
+    global dgnum
+    dgnum += 1
     """输入析取已经在外面的公式,转成DNF"""
     # 清除最外层括号
     f = _cleanOuterBrackets(f)
-    # print(f)
+    # 检查是否已经计算过了
+    if f in formula_dict:
+        print('-' * dgnum + '已经计算过了' + f)
+        dgnum -= 1
+        return formula_dict[f]
+    # 检查是否已经是标准型(新的递归出口)
+    x_idx = isNormalForm(f)
+    if x_idx >= 2:  # 用>0也行,但实际最小a∧X(b)中X最小是2
+        _alpha = _cleanOuterBrackets(f[:x_idx - 1])
+        _phi = _cleanOuterBrackets(f[x_idx + 1:])
+        formula_dict[f] = {(_alpha, _phi)}
+        print('-' * dgnum + '是标准型的' + f)
+        dgnum -= 1
+        return formula_dict[f]
+    print('-' * dgnum + '待计算的' + f)
     # 检查其模式,为G()或X()或F()形式
     if re.match(r'[GXF]\(.*\)$', f) is not None:
         if f.startswith('G'):
-            return parseToDNF('(False)R' + f[1:])
+            formula_dict[f] = parseToDNF('(False)R' + f[1:])
         elif f.startswith('F'):
-            return parseToDNF('(True)U' + f[1:])
+            formula_dict[f] = parseToDNF('(True)U' + f[1:])
         else:  # X
-            return [('True', f[2:-1])]  # True∧X(phi)
+            formula_dict[f] = {('True', f[2:-1])}  # True∧X(phi)
+        dgnum -= 1
+        return formula_dict[f]
     # DNF(False)=[]
     elif f == 'False':
-        return []
+        formula_dict[f] = set()
+        dgnum -= 1
+        return formula_dict[f]
     # 对不含LTL符号的一阶逻辑公式,DNF(alpha)=alpha∧X(True)
     elif _isOneOrder(f):
-        return [(f, 'True')]
+        formula_dict[f] = {(f, 'True')}
+        dgnum -= 1
+        return formula_dict[f]
     # 以上都不成立时,要检查根项,然后根据根的不同做不同的解析
     # 获得根元素下标
     root_idx = _parseRootSymbol(f)
@@ -119,43 +215,53 @@ def parseToDNF(f: str):
     if f[root_idx] == 'U':
         left_dnf = parseToDNF(phi_2)
         right_dnf = parseToDNF('(' + phi_1 + ')∧X(' + f + ')')
-        left_dnf.extend(right_dnf)
-        return left_dnf
+        formula_dict[f] = left_dnf | right_dnf
+        dgnum -= 1
+        return formula_dict[f]
     # DNF(ϕ1Rϕ2) = DNF(ϕ1∧ϕ2)∪DNF(ϕ2∧X(ϕ1Rϕ2))
     elif f[root_idx] == 'R':
-        left_dnf = parseToDNF('(' + phi_1 + ')∧(' + phi_2 + ')')
+        left_dnf = parseToDNF(_clearConjunction(phi_1, phi_2))
         right_dnf = parseToDNF('(' + phi_2 + ')∧X(' + f + ')')
-        left_dnf.extend(right_dnf)
-        return left_dnf
+        formula_dict[f] = left_dnf | right_dnf
+        dgnum -= 1
+        return formula_dict[f]
     # DNF(ϕ1∨ϕ2) = DNF(ϕ1)∪DNF(ϕ2)
     elif f[root_idx] == '∨':
         left_dnf = parseToDNF(phi_1)
         right_dnf = parseToDNF(phi_2)
-        left_dnf.extend(right_dnf)
-        return left_dnf
+        formula_dict[f] = left_dnf | right_dnf
+        dgnum -= 1
+        return formula_dict[f]
     #  DNF(ϕ1∧ϕ2) = {(α1∧α2)∧X(ψ1∧ψ2) |∀i = 1,2. αi∧X(ψi) ∈ DNF(ϕi)}
-    else:
+    else:  # ∧
         dnf_phi_1 = parseToDNF(phi_1)
-        # print(">1>", dnf_phi_1)
+        print('-' * dgnum + ">1>", dnf_phi_1)
         dnf_phi_2 = parseToDNF(phi_2)
-        # print(">2>", dnf_phi_2)
-        ret_dnf = []
+        print('-' * dgnum + ">2>", dnf_phi_2)
+        ret_dnf = set()
         for p1 in dnf_phi_1:
             for p2 in dnf_phi_2:
-                # 清理多余'True'
+                # 清理多余'True',多余的合取项,并保证出现次序
                 if p1[0] == 'True':
                     _alpha = p2[0]
                 elif p2[0] == 'True':
                     _alpha = p1[0]
+                elif p1[0] == p2[0]:  # 重复的只保留一个
+                    _alpha = p1[0]
                 else:
-                    _alpha = p1[0] if (p1[0] == p2[0]) else (p1[0] + '∧' + p2[0])
+                    _alpha = _clearConjunction(p1[0], p2[0])
+
                 if p1[1] == 'True':
                     _phi = p2[1]
                 elif p2[1] == 'True':
                     _phi = p1[1]
+                elif p1[1] == p2[1]:
+                    _phi = p1[1]
                 else:
-                    _phi = p1[1] if (p1[1] == p2[1]) else (p1[1] + '∧' + p2[1])
-                ret_dnf.append((_alpha, _phi))
+                    _phi = _clearConjunction(p1[1], p2[1])
+                ret_dnf.add((_alpha, _phi))
+        formula_dict[f] = ret_dnf
+        dgnum -= 1
         return ret_dnf
 
 
@@ -174,4 +280,5 @@ def parseToDNF2(formula: str) -> List[Tuple[str, str]]:
 
 if __name__ == '__main__':
     # print(parseToDNF('G(((b)U(c))∧((d)U(e)))'))
-    print(parseToDNF('(a)U((b)U(c))'))
+    # print(parseToDNF('(a)U(G(a))'))
+    print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
