@@ -38,7 +38,7 @@ if __name__ == '__main__':
     # 创建要写入的NBA对象
     nba: NBA = NBA()
     # 写入原子命题集合
-    ap_set: Set[str] = parseAP(dnf_str)
+    ap_set: Set[str] = parseAP(ltl_formula)
     nba.sigma = powSet(ap_set)
     # 写入初始状态，即<原始LTL公式,空集>
     nba.s0 = State(ltl_formula, set())
