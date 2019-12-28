@@ -45,7 +45,7 @@ def _parseRootSymbol(formula: str) -> int:
     return i + 1
 
 
-def _cleanOuterBrackets(formula: str) -> str:
+def cleanOuterBrackets(formula: str) -> str:
     """去除最外层的垃圾括号,如((..(a∧b)R(c)..))变成(a∧b)R(c)"""
     if len(formula) == 0 or formula[0] != '(':
         return formula
@@ -61,13 +61,13 @@ def _cleanOuterBrackets(formula: str) -> str:
             break
     if i != len(formula) - 1:  # 去除完成
         return formula
-    return _cleanOuterBrackets(formula[1: -1])  # 去掉头尾,递归去除
+    return cleanOuterBrackets(formula[1: -1])  # 去掉头尾,递归去除
 
 
 """"
 def parseToDNF(formula: str) -> List[Tuple[str, str]]:
     # 去除垃圾括号
-    formula = _cleanOuterBrackets(formula)
+    formula = cleanOuterBrackets(formula)
     # 递归解析
     if formula == 'False':
         return []  # 空集
@@ -130,7 +130,7 @@ def _parseCons(f: str) -> Set[str]:
     ret_set = set()
     # [-1,...,len]中间记录最外层合取'∧'的下标,以做两两拆分
     hq_idxes = [-1]
-    f = _cleanOuterBrackets(f)  # 清除多余括号
+    f = cleanOuterBrackets(f)  # 清除多余括号
     cnt = 0  # 记录左括号被右括号消除最后剩下的数目
     for i in range(len(f) - 1):
         if f[i] == '(':
@@ -171,7 +171,7 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
     dgnum += 1
     """输入析取已经在外面的公式,转成DNF"""
     # 清除最外层括号
-    f = _cleanOuterBrackets(f)
+    f = cleanOuterBrackets(f)
     # 检查是否已经计算过了
     if f in formula_dict:
         print('-' * dgnum + '已经计算过了' + f)
@@ -180,8 +180,8 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
     # 检查是否已经是标准型(新的递归出口)
     x_idx = isNormalForm(f)
     if x_idx >= 2:  # 用>0也行,但实际最小a∧X(b)中X最小是2
-        _alpha = _cleanOuterBrackets(f[:x_idx - 1])
-        _phi = _cleanOuterBrackets(f[x_idx + 1:])
+        _alpha = cleanOuterBrackets(f[:x_idx - 1])
+        _phi = cleanOuterBrackets(f[x_idx + 1:])
         formula_dict[f] = {(_alpha, _phi)}
         print('-' * dgnum + '是标准型的' + f)
         dgnum -= 1
@@ -265,7 +265,6 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
         dgnum -= 1
         return ret_dnf
 
-
 # --------------------------------------------------------
 
 """
@@ -283,3 +282,5 @@ if __name__ == '__main__':
     # print(parseToDNF('G(((b)U(c))∧((d)U(e)))'))
     # print(parseToDNF('(a)U(G(a))'))
     print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
+
+

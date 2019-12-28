@@ -33,8 +33,15 @@ def out_lts_graph(lts: LTS, file_type: str) -> None:
     # 生成TS的GraphViz有向图
     dot = Digraph(comment='LTL Transition System')
     for s in lts.s:  # 生成结点(公式phi)
-        # 第一参数是其唯一标识,第二参数是外显的文字,这里都用其字符串
-        dot.node(s, s, fontname="Microsoft YaHei")
+        # 初始状态
+        if s is lts.s0:
+            dot.node(s, s, fontname="Microsoft YaHei", style="filled",
+                 color="#ff99cc", fontcolor="#000000")
+        # 普通状态
+        else:
+            # 第一参数是其唯一标识,第二参数是外显的文字,这里都用其字符串
+            dot.node(s, s, fontname="Microsoft YaHei", style="filled",
+                 color="#CAE1FF", fontcolor="#000000")
     for t in lts.trans:  # 生成边(alpha)
         _phi1 = t.phi1
         _edge = '∧'.join(t.alpha)
@@ -53,4 +60,5 @@ def stateEqualByNormalForm(f1: str, f2: str) -> bool:
 
 
 if __name__ == '__main__':
-    print(stateEqualByNormalForm('G((a)R(b))', '(False)R((a)R(b))'))
+    print(stateEqualByNormalForm('((b)R(c))∧((d)R(e))',
+                                 '((d)R(e))∧((b)R(c))'))
