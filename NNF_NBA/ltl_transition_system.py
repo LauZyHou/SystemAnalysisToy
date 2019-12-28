@@ -2,6 +2,8 @@ from typing import List, Tuple, Dict, Set
 from dataclasses import dataclass
 from graphviz import Digraph
 
+from NNF_NBA import utils
+
 
 @dataclass
 class Transfer:
@@ -39,3 +41,16 @@ def out_lts_graph(lts: LTS, file_type: str) -> None:
         _phi2 = t.phi2
         dot.edge(_phi1, _phi2, _edge, fontname="Microsoft YaHei")
     dot.render('LTS.gv', view=True, format=file_type)
+
+
+def stateEqualByNormalForm(f1: str, f2: str) -> bool:
+    """判断LTS中的两个状态是否相等(通过比较其DNF)"""
+    if f1 == f2:
+        return True
+    f1_dnf = utils.parseToDNF(f1)
+    f2_dnf = utils.parseToDNF(f2)
+    return f1_dnf == f2_dnf
+
+
+if __name__ == '__main__':
+    print(stateEqualByNormalForm('G((a)R(b))', '(False)R((a)R(b))'))

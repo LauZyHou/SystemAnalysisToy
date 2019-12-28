@@ -249,7 +249,8 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
                 elif p1[0] == p2[0]:  # 重复的只保留一个
                     _alpha = p1[0]
                 else:
-                    _alpha = _clearConjunction(p1[0], p2[0])
+                    # _alpha = _clearConjunction(p1[0], p2[0])
+                    _alpha = (p1[0] + '∧' + p2[0]) if p1[0] > p2[0] else (p2[0] + '∧' + p1[0])
 
                 if p1[1] == 'True':
                     _phi = p2[1]
