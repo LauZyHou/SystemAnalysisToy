@@ -9,7 +9,7 @@ from NNF_NBA.ltl_transition_system import LTS, Transfer
 from NNF_NBA.ltl_transition_system import out_lts_graph
 
 # 输入的原始LTL公式
-ltl_formula = 'aUb'
+ltl_formula = 'G(((b)U(c))∧((d)U(e)))'
 
 if __name__ == '__main__':
     # 解析原始LTL公式的标准型
