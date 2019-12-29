@@ -68,7 +68,7 @@ class Delta:
 
 
 class NBA:
-    """非确定性Buchizi自动机"""
+    """非确定性Büchi自动机"""
     sigma: List[List[str]]  # 字母表，原子命题集合的幂集
     s: List[State]  # 状态集合
     s0: State  # 初始状态集合

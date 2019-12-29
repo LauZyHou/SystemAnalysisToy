@@ -1,21 +1,13 @@
-"""
-Release-free 或者 非Release-free且是Until-free的情况
-"""
-
 import re
 from typing import List, Tuple, Set, Dict
 
 from NNF_NBA import utils
 from NNF_NBA.ltl_transition_system import LTS, Transfer
-from NNF_NBA.ltl_transition_system import out_lts_graph
 from NNF_NBA.nondeterministic_buchi_automaton import NBA, Delta
 from NNF_NBA.nondeterministic_buchi_automaton import out_nba_graph
 
 # 输入的原始LTL公式
-# ltl_formula = 'G(((b)U(c))∧((d)U(e)))'
-# ltl_formula = 'G((a)U(b))'
 # ltl_formula = 'F((a)U(F(a)))'
-# ltl_formula = 'G((a)U(G(a)))'
 # ltl_formula = '(a)U(b)'
 # ltl_formula = '(b)R(G(a))'
 
@@ -82,14 +74,16 @@ if __name__ == '__main__':
         idx += 1
     # 集合{c}减去集合{a,b,c}为空,则将{a,b,c}去掉
     # 保留转移边上最松弛的条件
-    _trans = lts.trans[::]
+    _trans = lts.trans[::-1]
     for t in lts.trans[::-1]:
         for r in _trans:
             if r == t:  # 跳过自己
                 continue
-            elif (t.phi1 == r.phi1 and t.phi2 == r.phi2 or t.phi1 == 'True') \
-                    and set(t.alpha) - set(r.alpha) == set():
-                lts.trans.remove(r)
+            # 转移的起始状态相同,终止状态相同,转移存在语义上的偏序关系时
+            elif (t.phi1 == r.phi1 and t.phi2 == r.phi2) \
+                    and (set(r.alpha) - set(t.alpha) == set() or set(r.alpha) == {'True'}):
+                lts.trans.remove(t)
+                break  # 找到了能将t移除的r,就不必再找了
     # 用LTS构造NBA
     nba: NBA = NBA(lts)
     # 添加转移关系
@@ -111,17 +105,9 @@ if __name__ == '__main__':
     # 在不是Release-free的条件下,判断是Until-free
     elif re.search(r'[UF]', ltl_formula) is None:
         nba.f = nba.s
-    """
-    print('[状态集合]' + '-' * 40)
-    print(lts.s)
-    print('[初始状态]' + '-' * 40)
-    print(lts.s0)
-    print('[转移关系]' + '-' * 40)
-    for t in lts.trans:
-        print(t)
-    out_lts_graph(lts, 'png')
-    """
     print('-' * 50)
+    print('[字母表]' + '-' * 40)
+    print(nba.sigma)
     print('[状态集合]' + '-' * 40)
     print(nba.s)
     print('[初始状态]' + '-' * 40)
@@ -129,4 +115,7 @@ if __name__ == '__main__':
     print('[转移关系]' + '-' * 40)
     for d in nba.delta:
         print(d)
+    print('[终止状态]' + '-' * 40)
+    print(nba.f)
+    print('[输出图像]见新打开的窗口')
     out_nba_graph(nba, 'png')
