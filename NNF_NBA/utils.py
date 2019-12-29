@@ -47,7 +47,8 @@ def _parseRootSymbol(formula: str) -> int:
 
 def cleanOuterBrackets(formula: str) -> str:
     """去除最外层的垃圾括号,如((..(a∧b)R(c)..))变成(a∧b)R(c)"""
-    if len(formula) == 0 or formula[0] != '(':
+    # print('*' + formula)
+    if len(formula) <= 1 or formula[0] != '(':
         return formula
     # 去除完成的标志是,左右括号数目匹配完成时不在公式结尾
     left_num = 1
@@ -62,6 +63,45 @@ def cleanOuterBrackets(formula: str) -> str:
     if i != len(formula) - 1:  # 去除完成
         return formula
     return cleanOuterBrackets(formula[1: -1])  # 去掉头尾,递归去除
+
+
+def cleanInnerBrackets(formula: str) -> Set[str]:
+    """为析取式内部去除括号"""
+    ret: Set[str] = set()
+    f = cleanOuterBrackets(formula)
+    cnt = 0  # 左括号被右括号减少的数目
+    left = 0  # 子串开始位置
+    for i in range(len(f) - 2):
+        if f[i] == '(':
+            cnt += 1
+        elif f[i] == ')':
+            cnt -= 1
+        if cnt == 0 and f[i + 1] == '∨':
+            ret |= cleanInnerBrackets(f[left:i + 1])
+            left = i + 2
+    if left != 0:
+        ret |= cleanInnerBrackets(f[left:])
+    else:
+        ret = {f}
+    return ret
+
+
+def cleanBracketsOnAP(formula: str) -> str:
+    """清除原子命题两边的括号"""
+    # 先将True和False替换成其它字符串,保护起来
+    f = formula.replace('True', '#')
+    f = f.replace('False', '*')
+    # 记录不保留的数组下标,即'(a)'这样的三个字符
+    bye_set: Set[int] = set()
+    for i in range(1, len(f) - 1):
+        if ('z' >= f[i] >= 'a' or f[i] == '#' or f[i] == '*') and f[i - 1] == '(' and f[i + 1] == ')':
+            bye_set |= {i - 1, i + 1}
+    # 遍历,只保留那些留下的下标,同时将True和False还原
+    ret_str = ''
+    for i in range(len(f)):
+        if i not in bye_set:
+            ret_str += 'True' if f[i] == '#' else ('False' if f[i] == '*' else f[i])
+    return ret_str
 
 
 """"
@@ -265,6 +305,7 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
         dgnum -= 1
         return ret_dnf
 
+
 # --------------------------------------------------------
 
 """
@@ -281,6 +322,6 @@ def parseToDNF2(formula: str) -> List[Tuple[str, str]]:
 if __name__ == '__main__':
     # print(parseToDNF('G(((b)U(c))∧((d)U(e)))'))
     # print(parseToDNF('(a)U(G(a))'))
-    print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
-
-
+    # print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
+    # print(cleanInnerBrackets('(b∨c)'))
+    print(cleanBracketsOnAP('(True)∧(a)∧((a)∧(d))'))

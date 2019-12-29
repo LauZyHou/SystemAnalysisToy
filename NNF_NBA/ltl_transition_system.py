@@ -22,6 +22,7 @@ class LTS:
     s: List[str]  # 状态集合
     s0: str  # 初始状态,只有一个(应是初始状态集合{s0})
     trans: List[Transfer]  # 转移关系
+    state2nonbraker: Dict[str, str]  # 状态公式到清除原子命题外括号的映射
 
 
 def out_lts_graph(lts: LTS, file_type: str) -> None:
@@ -36,12 +37,12 @@ def out_lts_graph(lts: LTS, file_type: str) -> None:
         # 初始状态
         if s is lts.s0:
             dot.node(s, s, fontname="Microsoft YaHei", style="filled",
-                 color="#ff99cc", fontcolor="#000000")
+                     color="#ff99cc", fontcolor="#000000")
         # 普通状态
         else:
             # 第一参数是其唯一标识,第二参数是外显的文字,这里都用其字符串
             dot.node(s, s, fontname="Microsoft YaHei", style="filled",
-                 color="#CAE1FF", fontcolor="#000000")
+                     color="#CAE1FF", fontcolor="#000000")
     for t in lts.trans:  # 生成边(alpha)
         _phi1 = t.phi1
         _edge = '∧'.join(t.alpha)

@@ -3,12 +3,12 @@ Release-free 或者 非Release-free且是Until-free的情况
 """
 
 import re
-from typing import List, Tuple, Set
+from typing import List, Tuple, Set, Dict
 
 from NNF_NBA import utils
 from NNF_NBA.ltl_transition_system import LTS, Transfer
 from NNF_NBA.ltl_transition_system import out_lts_graph
-from NNF_NBA.nondeterministic_buchi_automaton import NBA
+from NNF_NBA.nondeterministic_buchi_automaton import NBA, Delta
 from NNF_NBA.nondeterministic_buchi_automaton import out_nba_graph
 
 # 输入的原始LTL公式
@@ -27,13 +27,15 @@ ltl_formula = '((a)∨(b))∧((c)R(d))'
 # ltl_formula = '((a)∧((c)R(d)))∨((b)∧((c)R(d)))'
 
 # 状态公式到DNF的映射,用于快速判断状态相等
-state2dnf = dict()
+state2dnf: Dict[str, Set[Tuple[str, str]]] = dict()
 
 if __name__ == '__main__':
     # 解析原始LTL公式的标准型
     origin_dnf: Set[Tuple[str, str]] = utils.parseToDNF(ltl_formula)
     # 构造LTS
     lts: LTS = LTS()
+    # 状态公式到清除原子命题外括号的映射,用于快速清除原子命题外的括号
+    lts.state2nonbraker = dict()
     # 生成字母表
     ap_set: Set[str] = utils.parseAP(ltl_formula)
     lts.sigma = utils.powSet(ap_set)
@@ -42,6 +44,7 @@ if __name__ == '__main__':
     # 将初始状态写入状态集合
     lts.s = [lts.s0]
     state2dnf[lts.s0] = origin_dnf
+    lts.state2nonbraker[lts.s0] = utils.cleanBracketsOnAP(lts.s0)
     # 准备转移边列表
     lts.trans = []
     # 遍历初始状态集合,解析标准型并尝试得到向后的转移
@@ -64,6 +67,7 @@ if __name__ == '__main__':
             if not is_old:  # 是新状态,加入状态列表
                 lts.s.append(phi)
                 state2dnf[phi] = now_dnf
+                lts.state2nonbraker[phi] = utils.cleanBracketsOnAP(phi)
             # 从当前状态经识别alpha可以转移到状态phi
             lts.trans.append(Transfer(lts.s[idx],
                                       list(set(alpha.split('∧'))),  # 去重
@@ -71,6 +75,15 @@ if __name__ == '__main__':
         idx += 1
     # 用LTS构造NBA
     nba: NBA = NBA(lts)
+    # 添加转移关系
+    nba.delta = [
+        Delta(
+            lts.state2nonbraker[t.phi1],
+            t.alpha,
+            lts.state2nonbraker[t.phi2],
+        )
+        for t in lts.trans
+    ]
     # 接下来用论文4.2中的特判方式设置可接受状态集
     # 判断是Release-free
     if re.search(r'[RG]', ltl_formula) is None:
@@ -91,7 +104,7 @@ if __name__ == '__main__':
         print(t)
     out_lts_graph(lts, 'png')
     """
-    print('-'*50)
+    print('-' * 50)
     print('[状态集合]' + '-' * 40)
     print(nba.s)
     print('[初始状态]' + '-' * 40)

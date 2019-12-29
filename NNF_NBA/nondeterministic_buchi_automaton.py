@@ -1,6 +1,7 @@
 from typing import List, Set
 from dataclasses import dataclass
 from graphviz import Digraph
+import re
 
 from NNF_NBA.ltl_transition_system import LTS, Transfer
 from NNF_NBA import utils
@@ -32,11 +33,35 @@ class Delta:
     formula: str  # 转移上的公式
     s2: State  # 转移后的状态
 
-    def __init__(self, _trans: Transfer):
-        """用LTS的转移关系构造NBA的转移关系"""
-        self.s1 = State(_trans.phi1)
-        self.formula = utils.cleanOuterBrackets('∧'.join(_trans.alpha))
-        self.s2 = State(_trans.phi2)
+    # def __init__(self, _trans: Transfer):
+    #     """用LTS的转移关系构造NBA的转移关系"""
+    #     self.s1 = State(_trans.phi1)
+    #     ret = ''
+    #     for t in _trans.alpha:
+    #         t = utils.cleanOuterBrackets(t)
+    #         if re.search(r'[)(]', t) is None:
+    #             ret += t + '∧'
+    #         else:
+    #             clean_list = list(utils.cleanInnerBrackets(t))
+    #             sorted(clean_list)
+    #             ret += '(' + '∨'.join(clean_list) + ')∧'
+    #     self.formula = ret[:-1]
+    #     self.s2 = State(_trans.phi2)
+
+    def __init__(self, _p1: str, _alpha: List[str], _p2: str):
+        """用传入phi1,alpha,phi2的方式构造NBA的转移关系"""
+        self.s1 = State(_p1)
+        ret = ''
+        for t in _alpha:
+            t = utils.cleanOuterBrackets(t)
+            if re.search(r'[)(]', t) is None:
+                ret += t + '∧'
+            else:
+                clean_list = list(utils.cleanInnerBrackets(t))
+                sorted(clean_list)
+                ret += '(' + '∨'.join(clean_list) + ')∧'
+        self.formula = ret[:-1]
+        self.s2 = State(_p2)
 
     def __str__(self):
         return str(self.s1) + '--' + self.formula + '-->' + str(self.s2)
@@ -53,9 +78,10 @@ class NBA:
     def __init__(self, _lts: LTS):
         """用LTS构造NBA"""
         self.sigma = _lts.sigma
-        self.s = [State(s) for s in _lts.s]
-        self.s0 = State(_lts.s0)
-        self.delta = [Delta(t) for t in _lts.trans]
+        self.s = [State(_lts.state2nonbraker[s]) for s in _lts.s]
+        self.s0 = State(_lts.state2nonbraker[_lts.s0])
+        # 改成手动传入
+        # self.delta = [Delta(t) for t in _lts.trans]
         self.f = []
 
 
