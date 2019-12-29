@@ -15,6 +15,10 @@ class Transfer:
     def __str__(self):
         return self.phi1 + '--' + '∧'.join(self.alpha) + '-->' + self.phi2
 
+    def __eq__(self, other):
+        """判断集合相等"""
+        return self.phi1 == other.phi1 and self.phi2 == other.phi2 and set(self.alpha) == set(other.alpha)
+
 
 class LTS:
     """LTL Transition System"""

@@ -23,13 +23,18 @@ from NNF_NBA.nondeterministic_buchi_automaton import out_nba_graph
 # ltl_formula = '((b)R(c))∧((d)R(e))'
 # ltl_formula = 'X((a)∨(b))'
 # ltl_formula = '(a)R(X((b)∨(c)))'
-ltl_formula = '((┐a)∨(b))∧((c)R(d))'
+# ltl_formula = '((┐a)∨(b))∧((c)R(d))'
 # ltl_formula = '((a)∧((c)R(d)))∨((b)∧((c)R(d)))'
+# ltl_formula = '(a)R(b)R(c)'
+
 
 # 状态公式到DNF的映射,用于快速判断状态相等
 state2dnf: Dict[str, Set[Tuple[str, str]]] = dict()
 
 if __name__ == '__main__':
+    # nnf_formula = 'aRbRc'
+    nnf_formula = input('请输入LTL公式:')
+    ltl_formula = utils.addBrackets(nnf_formula)
     # 解析原始LTL公式的标准型
     origin_dnf: Set[Tuple[str, str]] = utils.parseToDNF(ltl_formula)
     # 构造LTS
@@ -68,11 +73,23 @@ if __name__ == '__main__':
                 lts.s.append(phi)
                 state2dnf[phi] = now_dnf
                 lts.state2nonbraker[phi] = utils.cleanBracketsOnAP(phi)
+            # 去重
+            alpha_set = set(a.strip('()') for a in alpha.split('∧')) - {''}
             # 从当前状态经识别alpha可以转移到状态phi
             lts.trans.append(Transfer(lts.s[idx],
-                                      list(set(alpha.split('∧'))),  # 去重
+                                      list(alpha_set),
                                       now_state))  # DNF一样的状态也只用旧公式
         idx += 1
+    # 集合{c}减去集合{a,b,c}为空,则将{a,b,c}去掉
+    # 保留转移边上最松弛的条件
+    _trans = lts.trans[::]
+    for t in lts.trans[::-1]:
+        for r in _trans:
+            if r == t:  # 跳过自己
+                continue
+            elif (t.phi1 == r.phi1 and t.phi2 == r.phi2 or t.phi1 == 'True') \
+                    and set(t.alpha) - set(r.alpha) == set():
+                lts.trans.remove(r)
     # 用LTS构造NBA
     nba: NBA = NBA(lts)
     # 添加转移关系

@@ -405,4 +405,4 @@ if __name__ == '__main__':
     # print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
     # print(cleanInnerBrackets('(b∨c)'))
     # print(cleanBracketsOnAP('(True)∧(a)∧((a)∧(d))'))
-    print(addBrackets('aU(b∨d)Rc∧d'))
+    print(addBrackets('(a∨b)∧cRd'))
