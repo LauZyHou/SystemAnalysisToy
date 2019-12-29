@@ -80,7 +80,7 @@ class NBA:
         self.sigma = _lts.sigma
         self.s = [State(_lts.state2nonbraker[s]) for s in _lts.s]
         self.s0 = State(_lts.state2nonbraker[_lts.s0])
-        # 改成手动传入
+        # [bugfix]此处改成手动传入
         # self.delta = [Delta(t) for t in _lts.trans]
         self.f = []
 

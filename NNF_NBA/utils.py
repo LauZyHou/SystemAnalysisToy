@@ -308,20 +308,101 @@ def parseToDNF(f: str) -> Set[Tuple[str, str]]:
 
 # --------------------------------------------------------
 
+def preHandle(formula: str) -> str:
+    """对输入LTL公式的预处理"""
+    # 为True,False,所有原子命题(单字母)加括号
+    _f = formula
+    _f = re.sub(r'\(True\)|True', '(#)', _f)
+    _f = re.sub(r'\(False\)|False', '(*)', _f)
+    for i in range(26):
+        symbol = chr(i + ord('a'))
+        pattern = '(' + symbol + ')|' + symbol
+        to = '(' + symbol + ')'
+        _f = re.sub(pattern, to, _f)
+    _f = re.sub(r'\(#\)', '(True)', _f)
+    _f = re.sub(r'\(\*\)', '(False)', _f)
+    return _f
+
+
 """
 @deprecated
-def parseToDNF2(formula: str) -> List[Tuple[str, str]]:
-    # fixme
-    if formula == '(a)U(b)':
-        return [('b', 'True'), ('a', '(a)U(b)')]
-    elif formula == 'True':
-        return [('True', 'True')]
-    return []
+def judgeBracketsMatch(formula: str) -> bool:
+    # 判断公式是否满足:存在第一个括号和最后一个括号且匹配
+    _f = formula
+    if len(_f)<2:
+        return False
+    if _f[0]!='(' or _f[-1]!=')':
+        return False
+    pass
 """
+
+
+def addBrackets(formula: str) -> str:
+    """
+    为公式添加括号,即形成程序要求的输入形式(分治法)
+    LTL公式符号优先级
+    ﹁,X,G,F
+    U,R
+    ∧
+    ∨
+    """
+    _f = formula
+    # 优先级->值的字典
+    level_dict = {
+        'U': 0, 'R': 0, '∧': 1, '∨': 2
+    }
+    # 如果在0优先级,还要标识每个位置是U还是R
+    ur_list = []
+    # 查找可能的根元素位置,优先级最低的二元关系
+    now_lev = 0  # 优先级下降法,初始在{'U','R'}层
+    cnt = 0  # 左括号被右括号消除的剩余数量
+    split_list = [-1]  # 分离数组,存最低优先级根元素下标[-1,下标,len(_f)]
+    for i in range(0, len(_f)):
+        if _f[i] == '(':
+            cnt += 1
+        elif _f[i] == ')':
+            cnt -= 1
+        if cnt == 0 and 0 < i < len(_f) - 1:  # 考虑优先级
+            if _f[i] in level_dict:  # 如果是可能的根元素
+                if level_dict[_f[i]] < now_lev:  # 优先级过高
+                    continue  # 跳过
+                elif level_dict[_f[i]] == now_lev:  # 相等优先级
+                    split_list.append(i)  # 添加分割位置
+                    if now_lev == 0:  # 0级要标识是U还是R
+                        ur_list.append(_f[i])
+                else:  # 新找到的根优先级比现在的低
+                    now_lev = level_dict[_f[i]]  # 修改优先级
+                    split_list = [-1, i]  # 清空分割位置,只放当前位置
+    if len(split_list) > 1:  # 默认有个-1,最终>1说明找到了根,要按根分割
+        ret = ''
+        split_list.append(len(_f))
+        if now_lev == 0:
+            ur_list.append('#')
+        for j in range(len(split_list) - 1):
+            if now_lev == 0:
+                root = ur_list[j]
+            elif now_lev == 1:
+                root = '∧'
+            elif now_lev == 2:
+                root = '∨'
+            else:
+                root = '###'
+                print('*error*错误的优先层级')
+            # print(_f[split_list[j] + 1:split_list[j + 1]]) # 已测试
+            ret += '(' + cleanOuterBrackets(addBrackets(_f[split_list[j] + 1:split_list[j + 1]])) + ')' + root
+            # ret += addBrackets(_f[split_list[j] + 1:split_list[j + 1]]) + root
+        return ret[:-1]
+    else:  # 不存在根,为原子命题添加括号并返回
+        return preHandle(_f)
+
+
+# --------------------------------------------------------
+
 
 if __name__ == '__main__':
     # print(parseToDNF('G(((b)U(c))∧((d)U(e)))'))
     # print(parseToDNF('(a)U(G(a))'))
     # print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))
     # print(cleanInnerBrackets('(b∨c)'))
-    print(cleanBracketsOnAP('(True)∧(a)∧((a)∧(d))'))
+    # print(cleanBracketsOnAP('(True)∧(a)∧((a)∧(d))'))
+    print(addBrackets('aU(b∨d)Rc∧d'))

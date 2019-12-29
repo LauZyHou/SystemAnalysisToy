@@ -23,7 +23,7 @@ from NNF_NBA.nondeterministic_buchi_automaton import out_nba_graph
 # ltl_formula = '((b)R(c))∧((d)R(e))'
 # ltl_formula = 'X((a)∨(b))'
 # ltl_formula = '(a)R(X((b)∨(c)))'
-ltl_formula = '((a)∨(b))∧((c)R(d))'
+ltl_formula = '((┐a)∨(b))∧((c)R(d))'
 # ltl_formula = '((a)∧((c)R(d)))∨((b)∧((c)R(d)))'
 
 # 状态公式到DNF的映射,用于快速判断状态相等
