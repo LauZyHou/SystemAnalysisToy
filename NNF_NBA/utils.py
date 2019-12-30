@@ -1,7 +1,6 @@
 import re
 from typing import Set, List, Tuple
 from itertools import combinations
-from deprecated import deprecated
 
 
 def parseAP(formula: str) -> Set[str]:
@@ -16,6 +15,8 @@ def powSet(s: Set[str]) -> List[List[str]]:
     """求集合的幂集"""
     return [list(c) for i in range(len(s) + 1) for c in combinations(s, i)]
 
+
+# --------------------------------------------------------
 
 def _isOneOrder(formula: str) -> bool:
     """判断公式是否是不含LTL符号的一阶逻辑公式"""
@@ -45,6 +46,8 @@ def _parseRootSymbol(formula: str) -> int:
     return i + 1
 
 
+# --------------------------------------------------------
+
 def cleanOuterBrackets(formula: str) -> str:
     """去除最外层的垃圾括号,如((..(a∧b)R(c)..))变成(a∧b)R(c)"""
     # print('*' + formula)
@@ -64,6 +67,8 @@ def cleanOuterBrackets(formula: str) -> str:
         return formula
     return cleanOuterBrackets(formula[1: -1])  # 去掉头尾,递归去除
 
+
+# --------------------------------------------------------
 
 def cleanInnerBrackets(formula: str) -> Set[str]:
     """为析取式内部去除括号"""
@@ -86,6 +91,8 @@ def cleanInnerBrackets(formula: str) -> Set[str]:
     return ret
 
 
+# --------------------------------------------------------
+
 def cleanBracketsOnAP(formula: str) -> str:
     """清除原子命题两边的括号"""
     # 先将True和False替换成其它字符串,保护起来
@@ -102,32 +109,6 @@ def cleanBracketsOnAP(formula: str) -> str:
         if i not in bye_set:
             ret_str += 'True' if f[i] == '#' else ('False' if f[i] == '*' else f[i])
     return ret_str
-
-
-""""
-def parseToDNF(formula: str) -> List[Tuple[str, str]]:
-    # 去除垃圾括号
-    formula = cleanOuterBrackets(formula)
-    # 递归解析
-    if formula == 'False':
-        return []  # 空集
-    elif formula == 'True' or _isOneOrder(formula):
-        return [(formula, 'True')]  # phi∧X(True)
-    elif formula[0] == 'X' and formula[1] == '(' and formula[-1] == ')':
-        return [('True', formula[2:-1])]
-    else:
-        root_idx = _parseRootSymbol(formula)
-        print('-', root_idx)
-        phi_1, phi_2 = formula[:root_idx], formula[root_idx + 1:]
-        if formula[root_idx] == 'U':
-            left_dnf = parseToDNF(phi_2)
-            right_dnf = parseToDNF(phi_1 + '∧X(' + formula + ')')
-            print(left_dnf, right_dnf)
-            left_dnf.extend(right_dnf)
-            return left_dnf
-
-        return []
-"""
 
 
 # --------------------------------------------------------
@@ -324,19 +305,6 @@ def preHandle(formula: str) -> str:
     return _f
 
 
-"""
-@deprecated
-def judgeBracketsMatch(formula: str) -> bool:
-    # 判断公式是否满足:存在第一个括号和最后一个括号且匹配
-    _f = formula
-    if len(_f)<2:
-        return False
-    if _f[0]!='(' or _f[-1]!=')':
-        return False
-    pass
-"""
-
-
 def addBrackets(formula: str) -> str:
     """
     为公式添加括号,即形成程序要求的输入形式(分治法)
@@ -400,6 +368,7 @@ def addBrackets(formula: str) -> str:
 
 
 if __name__ == '__main__':
+    """接口测试"""
     # print(parseToDNF('G(((b)U(c))∧((d)U(e)))'))
     # print(parseToDNF('(a)U(G(a))'))
     # print(_clearConjunction('(a)∧((a)∧(d))', '((b)∧(c))'))

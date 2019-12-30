@@ -9,7 +9,7 @@ from NNF_NBA import utils
 
 @dataclass
 class State:
-    """Buchi自动机的状态"""
+    """非确定性Büchi自动机的状态"""
     formula: str  # 公式部分
     pset: Set[str]  # 集合部分,仅当需要通用的构造方式时,使用此字段
 
@@ -28,7 +28,7 @@ class State:
 
 @dataclass
 class Delta:
-    """Buchi自动机的转移类"""
+    """非确定性Büchi自动机的转移类"""
     s1: State  # 转移前的状态
     formula: str  # 转移上的公式
     s2: State  # 转移后的状态
